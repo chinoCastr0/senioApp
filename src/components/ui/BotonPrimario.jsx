@@ -9,4 +9,4 @@ export default function BotonPrimario({ texto, onClick, disabled = false, classN
       {texto}
     </button>
   )
-}
+} //boton primario se le dice al boton mas importante de la pantalla; avanzar, guardar, subir, etc.

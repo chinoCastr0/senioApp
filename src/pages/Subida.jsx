@@ -1,56 +1,54 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import BotonPrimario from '../components/ui/BotonPrimario'
 
+import BotonPrimario from '../components/ui/BotonPrimario'
+import InputArchivo from '../components/ui/InputArchivo'
+import VistaPreviaImagen from '../components/ui/VistaPreviaImagen'
 
 export default function Subida() {
   const [archivo, setArchivo] = useState(null)
+  const [preview, setPreview] = useState(null)
   const navigate = useNavigate()
 
-  function manejarArchivo(evento) {
-    const archivoSubido = evento.target.files[0]
-    if (archivoSubido) {
-      setArchivo(archivoSubido)
+  useEffect(() => {
+    if (archivo && archivo.type.startsWith('image/')) {
+      const url = URL.createObjectURL(archivo)
+      setPreview(url)
+      return () => URL.revokeObjectURL(url)
+    } else {
+      setPreview(null)
     }
+  }, [archivo])
+
+
+
+  function irALayouts() {
+    navigate('/layouts', { state: { archivo } })
   }
 
-  function irAEdicion() {
-    navigate('/editar')
-  }
+  return (
+    <div className="bg-emerald-900 min-h-screen flex flex-col items-center justify-center gap-6 p-4">
+      <h1 className="text-white text-2xl font-bold text-center border-">Subí tu recurso</h1>
 
-   return (
-  <div className="bg-slate-600">
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4">
-      <h1 className="text-2xl font-bold text-center">Subí tu recurso</h1>
-
-      <label className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700 transition">
-        Elegir archivo
-        <input
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          onChange={manejarArchivo}
-          className="hidden"
-        />
-      </label>
+      <InputArchivo onArchivoSeleccionado={setArchivo} />
 
       {archivo && (
-        <p className="text-gray-700 text-sm">
-          Archivo seleccionado: <strong>{archivo.name}</strong>
-        </p>
+        <div className="text-center text-sm text-gray-300">
+          {preview && (
+            <div className="max-h-30 mt-4 border rounded p-4 bg-blue-900">
+              <p className="mb-2">Vista previa:</p>
+              <VistaPreviaImagen src={preview} className="max-h-20 mx-auto" />
+            </div>
+          )}
+        </div>
       )}
-      <BotonPrimario
+
+      <BotonPrimario className='border-2 border-white-300'
         texto="Siguiente →"
-        onClick={irAEdicion}
+        onClick={irALayouts}
         disabled={!archivo}
       />
     </div>
-    </div>
   )
 }
-     /* <button
-        onClick={irAEdicion}
-        disabled={!archivo}
-        className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Siguiente →
-      </button>*/
+
