@@ -1,28 +1,34 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import BotonPrimario from '../components/ui/BotonPrimario';
-import VistaPreviaImagen from '../components/ui/VistaPreviaImagen';
-import useImagenTemporal from '../hooks/useImagenTemporal';
+import { useLocation } from "react-router-dom"
+import { useState, useEffect } from "react"
+import VistaPreviaPDF from "../components/VistaPreviaPDF"
+
 export default function Grilla() {
-    const navigate = useNavigate();
-    function irASubida() {
-        navigate('/');
+  const location = useLocation()
+  const [base64Procesada, setBase64Procesada] = useState("")
+  const [layoutSeleccionado, setLayoutSeleccionado] = useState(null)
+
+  useEffect(() => {
+    if (location.state) {
+      setBase64Procesada(location.state.base64Procesada)
+      setLayoutSeleccionado(location.state.layoutSeleccionado)
     }
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-green-400">
-            <h1 className="text-2xl font-bold text-center">Grilla de Recursos</h1>
-            <p className="text-center mt-4">Aquí se mostrarán los recursos subidos.</p>
-            <div className="mt-8">
-                <VistaPreviaImagen src={useImagenTemporal().base64} className="max-h-40 mx-auto" />
+  }, [location.state])
 
-            <BotonPrimario
-                texto="Exportar Grilla"
-                onClick={irASubida}
-                className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition"
-            />
-        </div>
-        </div>
-    )
+  return (
+    <div className="p-6 flex flex-col items-center text-center">
+      <div className="flex items-center gap-2 text-green-600 mb-4">
+        <span className="text-2xl">✅</span>
+        <h1 className="text-xl font-bold">Grilla finalizada con éxito</h1>
+      </div>
 
-
+      {base64Procesada && layoutSeleccionado ? (
+        <VistaPreviaPDF
+          base64Procesada={base64Procesada}
+          layoutSeleccionado={layoutSeleccionado}
+        />
+      ) : (
+        <p className="text-gray-500">Cargando datos...</p>
+      )}
+    </div>
+  )
 }

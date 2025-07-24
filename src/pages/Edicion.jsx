@@ -35,7 +35,7 @@ export default function Edicion() {
       async function irAGrilla() {
   const base64Procesada = await aplicarFiltroCanvas(base64, filtro)
   setBase64(base64Procesada) // reemplaza con la imagen filtrada de verdad
-  navigate('/grilla', { state: { layoutSeleccionado } })
+  navigate('/grilla', { state: { base64Procesada,layoutSeleccionado } })
   console.log('obtenido', {state: {layoutSeleccionado, base64Procesada}})
 }
   const filtroActual = FILTROS.find(f => f.clave === filtro)
