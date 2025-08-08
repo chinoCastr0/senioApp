@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 function base64ToFile(base64, filename = "imagen.png") {
   const arr = base64.split(",")
@@ -12,11 +12,12 @@ function base64ToFile(base64, filename = "imagen.png") {
   return new File([u8arr], filename, { type: mime })
 }
 
-export default function VistaPreviaPDF({ base64Procesada, layoutSeleccionado }) {
+export default function CrearPDF({ base64Procesada, layoutSeleccionado }) {
   const [pdfURL, setPdfURL] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const generarPDF = async () => {
+  const generarPDF = useCallback(async () => {
+    if (!base64Procesada || !layoutSeleccionado) return;
     setLoading(true)
     try {
       const archivo = base64ToFile(base64Procesada)
@@ -44,34 +45,32 @@ export default function VistaPreviaPDF({ base64Procesada, layoutSeleccionado }) 
     } finally {
       setLoading(false)
     }
-  }
+    
+  }, [base64Procesada, layoutSeleccionado])
 
+useEffect(() => {
+  generarPDF()
+}, [generarPDF])
   return (
-    <div className="flex flex-col items-center gap-4 mt-4">
-      <button
-        onClick={generarPDF}
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded shadow disabled:opacity-50"
-      >
-        {loading ? "Generando..." : "Vista previa de impresión"}
-      </button>
+  <div className="flex flex-col items-center gap-4 mt-4">
+    {loading && <p className="text-gray-500">Generando PDF...</p>}
 
-      {pdfURL && (
-        <>
-          <iframe
-            src={pdfURL}
-            title="Vista previa del PDF"
-            className="w-full max-w-[400px] h-[500px] border"
-          />
-          <a
-            href={pdfURL}
-            download="grilla.pdf"
-            className="mt-2 text-sm text-blue-600 underline"
-          >
-            Descargar PDF
-          </a>
-        </>
-      )}
-    </div>
-  )
+    {pdfURL && (
+      <>
+        <iframe
+          src={pdfURL}
+          title="Vista previa del PDF"
+          className="h-[50vh] rounded-xl border border-gray-300 shadow-md"
+        />
+        <a
+          href={pdfURL}
+          download="grilla.pdf"
+          className="bg-blue-600 p-3 mt-2 text-sm text-white underline rounded-x1 shadow "
+        >
+          Descargar PDF
+        </a>
+      </>
+    )}
+  </div>
+)
 }

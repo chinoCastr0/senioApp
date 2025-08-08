@@ -5,6 +5,7 @@ import BotonPrimario from '../components/ui/BotonPrimario'
 import InputArchivo from '../components/ui/InputArchivo'
 import VistaPreviaImagen from '../components/ui/VistaPreviaImagen'
 import useImagenTemporal from '../hooks/useImagenTemporal'
+import InputComunicado from '../components/ui/InputComunicado'
 
 export default function Subida() {
   const [archivo, setArchivo] = useState(null)
@@ -58,11 +59,19 @@ export default function Subida() {
 
       <BotonPrimario
       //  className="border-2 border-white-300"
-        texto="Siguiente →"
+        texto="Crear grilla →"
         onClick={irALayouts}
         disabled={!archivo}
       />
+
+      <BotonPrimario
+      //  className="border-2 border-white-300"
+        texto="Crear comunicado →"
+        onClick={() => navigate('/GrillaComunicado')}
+      />
+      <InputComunicado /> {/* Componente para generar comunicado */}
     </div>
+    
   )
 }
 

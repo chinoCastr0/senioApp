@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom"
 import { useState, useEffect } from "react"
-import VistaPreviaPDF from "../components/VistaPreviaPDF"
+import CrearPDF from "../components/ui/CrearPDF"
 
 export default function Grilla() {
   const location = useLocation()
@@ -15,14 +15,14 @@ export default function Grilla() {
   }, [location.state])
 
   return (
-    <div className="p-6 flex flex-col items-center text-center">
-      <div className="flex items-center gap-2 text-green-600 mb-4">
+    <div className="h-[100vh] bg-emerald-900 p-6 flex flex-col items-center text-center">
+      <div className="flex items-center gap-2 text-white mb-4">
         <span className="text-2xl">✅</span>
         <h1 className="text-xl font-bold">Grilla finalizada con éxito</h1>
       </div>
 
       {base64Procesada && layoutSeleccionado ? (
-        <VistaPreviaPDF
+        <CrearPDF
           base64Procesada={base64Procesada}
           layoutSeleccionado={layoutSeleccionado}
         />

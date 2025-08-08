@@ -9,7 +9,7 @@ export function calcularDPI(archivo, anchoMm, altoMm) {
 }
 
 export function clasificarCalidad(dpi) {
-  if (dpi >= 200) return { texto: "Óptima calidad", color: "text-green-600" }
-  if (dpi >= 120) return { texto: "Aceptable", color: "text-yellow-600" }
+  if (dpi >= 60) return { texto: "Óptima calidad", color: "text-green-600" }
+  if (dpi >= 40) return { texto: "Aceptable", color: "text-yellow-600" }
   return { texto: "Baja calidad", color: "text-red-600" }
   }
