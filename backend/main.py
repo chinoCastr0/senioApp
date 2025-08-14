@@ -13,6 +13,9 @@ from reportlab.lib.enums import TA_LEFT
 from reportlab.lib import colors
 from reportlab.platypus import Paragraph, Frame, KeepInFrame
 
+from utils.preview import crear_preview_pdf  # <-- importa desde utils
+
+
 from io import BytesIO
 from math import floor
 import base64
@@ -33,29 +36,41 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.post("/generar-pdf")
 async def generar_pdf(
+    request: Request,
     file: UploadFile = File(...),
     altoMm: float = Form(...),
     anchoMm: float = Form(...),
-    cantidad: int = Form(...)
+    cantidad: int = Form(...),
 ):
     image_bytes = await file.read()
     image_base64 = base64.b64encode(image_bytes).decode("utf-8")
     image_base64 = f"data:{file.content_type};base64,{image_base64}"
 
-    layout_data = {
-        "altoMm": altoMm,
-        "anchoMm": anchoMm,
-        "cantidad": cantidad
-    }
+    layout_data = {"altoMm": altoMm, "anchoMm": anchoMm, "cantidad": cantidad}
 
-    pdf_buffer = create_photocopy_grid_pdf(image_base64, layout_data)
+    pdf_buffer = create_photocopy_grid_pdf(image_base64, layout_data)  # -> BytesIO
 
-    return StreamingResponse(pdf_buffer, media_type="application/pdf", headers={
-        "Content-Disposition": "inline; filename=grilla.pdf"
+    # Guardar PDF en /uploads
+    filename = f"grilla_{uuid.uuid4().hex}.pdf"
+    filepath = os.path.join("uploads", filename)
+    with open(filepath, "wb") as f:
+        f.write(pdf_buffer.getvalue())
+
+    # Crear preview (JPG de la primera página)
+    preview_rel = crear_preview_pdf(filepath)  # usa Poppler del PATH
+
+    rel_path = f"/uploads/{filename}"
+    base = str(request.base_url).rstrip("/")
+
+    return JSONResponse({
+        "path": rel_path,
+        "url": f"{base}{rel_path}",
+        "preview_path": preview_rel,
+        "preview_url": f"{base}{preview_rel}",
     })
-
 #GENERA EL COMUNICADO DE SUBIDA
 
 @app.get("/download/{file_id}") #para borrar el archivo dps de q lo genere
