@@ -8,7 +8,7 @@ import useImagenTemporal from '../hooks/useImagenTemporal'
 import { postForm} from '../helpers/api'
 
 export default function Subida() {
-  // ---- Imagen para grilla (tu flujo actual) ----
+  // ---- Imagen para grilla (flujo actual) ----
   const [archivo, setArchivo] = useState(null)
   const [preview, setPreview] = useState(null)
   const navigate = useNavigate()
@@ -71,25 +71,27 @@ export default function Subida() {
   }
 
   return (
-    <div className="bg-neutral-800 min-h-screen flex flex-col items-center justify-center gap-6 p-4">
+    <div className="bg-white min-h-screen flex flex-col items-center justify-center gap-6 p-4">
       <h1 className="text-white text-2xl font-bold text-center"></h1>
 
       {/* --- Bloque: subir imagen para grilla --- */}
-      <div className="w-full max-w-md bg-emerald-800/40 p-4 rounded-xl border border-emerald-700">
-        <h2 className="text-white text-lg mb-2">Subí tu recurso</h2>
-        <InputArchivo onArchivoSeleccionado={manejarArchivo} />
+      <div className="h-70 w-full max-w-md bg-emerald-800/90 p-4 rounded-xl border border-emerald-700">
+        <h2 className="text-white font-serif text-lg  mb-1">Subí tu recurso</h2>
+        <p className="text-white mb-4">Subi una imagen para crear una grilla lista para recortar</p>
+        <InputArchivo onArchivoSeleccionado={manejarArchivo} className="" />
 
         {preview && (
-          <div className="text-center text-sm text-gray-200">
-            <div className="mt-4 border border-emerald-700 rounded p-3 bg-emerald-800/30">
+          <div className=" text-center text-sm text-gray-200">
+            <div className=" mt-4 border border-emerald-700 rounded p-3 bg-emerald-800/30">
               <p className="mb-2"></p>
               <VistaPreviaImagen src={preview} className="max-h-20 mx-auto" />
             </div>
           </div>
         )}
 
-        <div className="mt-4">
+        <div className="mt-4 flex justify-end">
           <BotonPrimario
+          div className="w-full"
             texto="Crear grilla →"
             onClick={irALayouts}
             disabled={!archivo}
@@ -98,10 +100,10 @@ export default function Subida() {
       </div>
 
       {/* separador visual */}
-      <div className="text-emerald-200 text-xs opacity-70"></div>
+      <div className="text-gray-900 font-serif text-6xl opacity-70 hidden">A Nisman lo mataron</div>
 
       {/* --- Bloque: comunicado rápido --- */}
-      <div className="w-full max-w-md bg-emerald-800/40 p-4 rounded-xl border border-emerald-700">
+      <div className="w-full max-w-md bg-emerald-800/90 p-4 rounded-xl border border-emerald-700">
         <h2 className="text-white text-lg mb-2">Comunicado rápido</h2>
         <form onSubmit={generarComunicado} className="space-y-3">
           <label htmlFor="comunicado" className="block text-sm text-emerald-100">
@@ -117,9 +119,13 @@ export default function Subida() {
           />
           {errorCom && <p className="text-sm text-red-300">{errorCom}</p>}
 
-          <BotonPrimario type="submit" disabled={cargandoCom}>
+          <BotonPrimario 
+          className="w-full"
+          type="submit" 
+          disabled={cargandoCom}
+          texto="Crear comunicado →">
             {cargandoCom ? 'Generando…' : 'Ver vista previa'}
-            texto=""
+            
           </BotonPrimario>
         </form>
       </div>
