@@ -1,28 +1,54 @@
-// src/hooks/useImagenTemporal.js
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from "react";
 
-const CLAVE_STORAGE = 'imagenBase64'
+const CLAVE_ORIGINAL = "imagenOriginalBase64"; // nueva
+const CLAVE_VIEJA   = "imagenBase64";          // legacy
 
 export default function useImagenTemporal() {
-  const [base64, setBase64State] = useState(null)
+  const [originalBase64, setOriginalState] = useState(null);
+  const [ready, setReady] = useState(false);   // ⬅️ listo para usar
 
-  // Al iniciar, buscamos si ya había una imagen guardada
   useEffect(() => {
-    const guardada = localStorage.getItem(CLAVE_STORAGE)
-    if (guardada) setBase64State(guardada)
-  }, [])
+    let orig = localStorage.getItem(CLAVE_ORIGINAL);
 
-  // Cuando se actualiza el base64, también lo guardamos en localStorage
-  const setBase64 = (nuevoBase64) => {
-    setBase64State(nuevoBase64)
-    localStorage.setItem(CLAVE_STORAGE, nuevoBase64)
-  }
+    if (!orig) {
+      const vieja = localStorage.getItem(CLAVE_VIEJA);
+      if (vieja) {
+        orig = vieja;
+        localStorage.setItem(CLAVE_ORIGINAL, vieja);
+      }
+    }
 
-  // Borrar la imagen temporal cuando termina el flujo
-  const clearBase64 = () => {
-    setBase64State(null)
-    localStorage.removeItem(CLAVE_STORAGE)
-  }
+    if (orig) setOriginalState(orig);
+    setReady(true);                            // ⬅️ marcamos que terminó la carga
+  }, []);
 
-  return { base64, setBase64, clearBase64 }
+  const setOriginalBase64Once = (b64) => {
+    if (!b64) return;
+    const existente = localStorage.getItem(CLAVE_ORIGINAL);
+    if (existente) {
+      setOriginalState(existente);
+      return;
+    }
+    localStorage.setItem(CLAVE_ORIGINAL, b64);
+    localStorage.setItem(CLAVE_VIEJA, b64);    // compatibilidad
+    setOriginalState(b64);
+  };
+
+  const clearAll = () => {
+    localStorage.removeItem(CLAVE_ORIGINAL);
+    localStorage.removeItem(CLAVE_VIEJA);
+    setOriginalState(null);
+    setReady(true);
+  };
+
+  // Alias legacy
+  const base64 = originalBase64;
+
+  return {
+    originalBase64,
+    base64,
+    ready,                 // ⬅️ NUEVO
+    setOriginalBase64Once,
+    clearAll,
+  };
 }

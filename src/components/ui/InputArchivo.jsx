@@ -7,7 +7,7 @@ export default function InputArchivo({ onArchivoSeleccionado , accept = '.webp,.
   }
 
   return (
-    <label className="border-2 border-white-300 bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700 transition">
+    <label className=" border-2 border-white-300 bg-amber-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-amber-700 transition">
       {texto}
       <input
         type="file"

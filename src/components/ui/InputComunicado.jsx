@@ -1,11 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import BotonPrimario from './BotonPrimario'
 
 export default function InputComunicado() {
   const [texto, setTexto] = useState('')
-  const [previewURL, setPreviewURL] = useState(null)
-  const [pdfURL, setPdfURL] = useState(null)
   const [cargando, setCargando] = useState(false)
+  const navigate = useNavigate()
 
   const handleGenerar = async () => {
     if (!texto.trim()) {
@@ -14,8 +14,6 @@ export default function InputComunicado() {
     }
 
     setCargando(true)
-    setPreviewURL(null)
-    setPdfURL(null)
 
     const formData = new FormData()
     formData.append('texto', texto)
@@ -25,19 +23,15 @@ export default function InputComunicado() {
         method: 'POST',
         body: formData
       })
-
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`)
       }
-
       const data = await response.json()
+      const pdf = encodeURIComponent(data.pdf_url || data.preview_url)
+      const download = encodeURIComponent(data.download_url || data.pdf_url)
 
-      if (!data.preview_url || !data.pdf_url) {
-        throw new Error('La respuesta del servidor no es válida.')
-      }
-
-      setPreviewURL(data.preview_url)
-      setPdfURL(data.pdf_url)
+      // vamos a la página de preview final con ambas URLs
+      navigate(`/grilla-comunicado?pdf=${pdf}&download=${download}`)
     } catch (error) {
       console.error('Error al generar comunicado:', error)
       alert('No se pudo generar el comunicado. Intenta nuevamente.')
@@ -60,26 +54,8 @@ export default function InputComunicado() {
         onClick={handleGenerar}
         texto={cargando ? 'Generando...' : 'Generar comunicado'}
         disabled={cargando}
+        className="w-full"
       />
-
-      {previewURL && (
-        <div className="mt-4 flex flex-col gap-2 items-start">
-          <img
-            src={previewURL}
-            alt="Vista previa del comunicado"
-            className="w-auto h-auto border rounded"
-          />
-          {pdfURL && (
-            <a
-              href={pdfURL}
-              download
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            >
-              Descargar PDF
-            </a>
-          )}
-        </div>
-      )}
     </div>
   )
 }

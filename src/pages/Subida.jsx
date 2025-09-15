@@ -1,3 +1,4 @@
+// src/pages/Subida.jsx
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -5,29 +6,37 @@ import BotonPrimario from '../components/ui/BotonPrimario'
 import InputArchivo from '../components/ui/InputArchivo'
 import VistaPreviaImagen from '../components/ui/VistaPreviaImagen'
 import useImagenTemporal from '../hooks/useImagenTemporal'
-import { postForm} from '../helpers/api'
+import { postForm } from '../helpers/api'
 
 export default function Subida() {
   // ---- Imagen para grilla (flujo actual) ----
   const [archivo, setArchivo] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [ultimoBase64, setUltimoBase64] = useState(null)
+  const [listoBase64, setListoBase64] = useState(false)
   const navigate = useNavigate()
-  const { setBase64 } = useImagenTemporal()
 
-  // Cuando se elige un archivo, lo convertimos a base64 y lo guardamos
-  const manejarArchivo = (archivo) => {
-    setArchivo(archivo) // lo guardás si querés usarlo para preview temporal
+  const { setOriginalBase64Once, clearAll } = useImagenTemporal()
 
-    if (archivo && archivo.type.startsWith('image/')) {
-      const lector = new FileReader() // instancia del navegador para leer archivos
+  const manejarArchivo = (archivoSel) => {
+    setArchivo(archivoSel)
+
+    if (archivoSel && archivoSel.type.startsWith('image/')) {
+      clearAll?.()
+      setListoBase64(false)
+      setUltimoBase64(null)
+
+      const lector = new FileReader()
       lector.onload = () => {
-        setBase64(lector.result) // guardado en localStorage
+        const b64 = lector.result
+        setUltimoBase64(b64)
+        setOriginalBase64Once?.(b64)
+        setListoBase64(true)
       }
-      lector.readAsDataURL(archivo) // lee el archivo como DataURL
+      lector.readAsDataURL(archivoSel)
     }
   }
 
-  // Generar vista previa (ObjectURL solo para mostrar)
   useEffect(() => {
     if (archivo && archivo.type.startsWith('image/')) {
       const url = URL.createObjectURL(archivo)
@@ -38,9 +47,8 @@ export default function Subida() {
     }
   }, [archivo])
 
-  // Ir a seleccionar layouts para la grilla de imagen
   function irALayouts() {
-    navigate('/layouts') // no se pasa el archivo: ya está guardado en localStorage
+    navigate('/layouts', { state: { base64Tmp: ultimoBase64 } })
   }
 
   // ---- Comunicado rápido (nuevo, inline) ----
@@ -57,11 +65,18 @@ export default function Subida() {
     setErrorCom('')
     setCargandoCom(true)
     try {
-      // Ajustá la ruta según tu backend. Si tu helper ya tiene baseURL, dejá solo el path:
-       const fd = new FormData()
+      const fd = new FormData()
       fd.append('texto', texto)
-      const { preview_url, pdf_url } = await postForm('/generar-comunicado', fd)
-      const qs = new URLSearchParams({ preview: preview_url, pdf: pdf_url })
+      const data = await postForm('/generar-comunicado', fd)
+
+      // Antes mandabas solo pdf; ahora incluimos download.
+      const pdf = data?.pdf_url || data?.preview_url
+      const download = data?.download_url || null
+
+      const qs = new URLSearchParams()
+      if (pdf) qs.set('pdf', pdf)
+      if (download) qs.set('download', download)
+
       navigate(`/grilla-comunicado?${qs.toString()}`)
     } catch  {
       setErrorCom('Hubo un error generando la vista previa')
@@ -71,18 +86,20 @@ export default function Subida() {
   }
 
   return (
-    <div className="bg-white min-h-screen flex flex-col items-center justify-center gap-6 p-4">
-      <h1 className="text-white text-2xl font-bold text-center"></h1>
+    <div className="bg-emerald-900 min-h-screen flex flex-col items-center justify-center gap-6 p-4">
+      <h1 className="text-white text-2xl font-bold text-center">SEÑO</h1>
 
       {/* --- Bloque: subir imagen para grilla --- */}
-      <div className="h-70 w-full max-w-md bg-emerald-800/90 p-4 rounded-xl border border-emerald-700">
-        <h2 className="text-white font-serif text-lg  mb-1">Subí tu recurso</h2>
-        <p className="text-white mb-4">Subi una imagen para crear una grilla lista para recortar</p>
+      <div className=" w-full max-w-md bg-white p-4 rounded-xl border border-emerald-200">
+        <h1 className="text-black text-xl  mb-1">Subí tu actividad</h1>
+        <h3 className="text-gray-950 text-lg mb-4">Subi una imagen para crear una grilla lista para recortar. </h3>
+        <p className="text-black text-sm mb-4 bg-yellow-200 p-3">📷 Tip: asegurate de que la imagen esté clara y se lea bien antes de subirla. </p>
+
         <InputArchivo onArchivoSeleccionado={manejarArchivo} className="" />
 
         {preview && (
-          <div className=" text-center text-sm text-gray-200">
-            <div className=" mt-4 border border-emerald-700 rounded p-3 bg-emerald-800/30">
+          <div className=" text-center text-sm text-emerald-700">
+            <div className=" mt-4 border border-emerald-200 rounded p-3 bg-emerald-50">
               <p className="mb-2"></p>
               <VistaPreviaImagen src={preview} className="max-h-20 mx-auto" />
             </div>
@@ -91,22 +108,23 @@ export default function Subida() {
 
         <div className="mt-4 flex justify-end">
           <BotonPrimario
-          div className="w-full"
-            texto="Crear grilla →"
+            div
+            className="w-full"
+            texto={listoBase64 ? "Crear grilla →" : "Leyendo imagen…"}
             onClick={irALayouts}
-            disabled={!archivo}
+            disabled={!archivo || !listoBase64}
           />
         </div>
       </div>
 
       {/* separador visual */}
-      <div className="text-gray-900 font-serif text-6xl opacity-70 hidden">A Nisman lo mataron</div>
+      <div className="text-gray-900 font-serif text-6xl opacity-70 hidden"></div>
 
       {/* --- Bloque: comunicado rápido --- */}
-      <div className="w-full max-w-md bg-emerald-800/90 p-4 rounded-xl border border-emerald-700">
-        <h2 className="text-white text-lg mb-2">Comunicado rápido</h2>
+      <div className="w-full max-w-md bg-white p-4 rounded-xl border border-emerald-200">
+        <h2 className="text-black text-lg mb-2">Comunicado rápido</h2>
         <form onSubmit={generarComunicado} className="space-y-3">
-          <label htmlFor="comunicado" className="block text-sm text-emerald-100">
+          <label htmlFor="comunicado" className="block text-sm text-black">
             Escribí el comunicado
           </label>
           <textarea
@@ -115,20 +133,21 @@ export default function Subida() {
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             placeholder="Ej: Señores padres: Mañana no hay clases por acto escolar..."
-            className="w-full rounded-xl p-3 text-base outline-none border border-emerald-700 bg-emerald-900 text-emerald-50 placeholder-emerald-300 focus:border-emerald-400"
+            className="w-full rounded-xl p-3 text-base outline-none border border-emerald-300 bg-emerald-50 text-black placeholder-gray-600 focus:border-emerald-400"
           />
           {errorCom && <p className="text-sm text-red-300">{errorCom}</p>}
 
           <BotonPrimario 
-          className="w-full"
-          type="submit" 
-          disabled={cargandoCom}
-          texto="Crear comunicado →">
-            {cargandoCom ? 'Generando…' : 'Ver vista previa'}
-            
-          </BotonPrimario>
+            className="w-full text-black"
+            type="submit" 
+            disabled={cargandoCom}
+            texto={cargandoCom ? 'Generando…' : 'Crear comunicado →'}
+          />
         </form>
       </div>
     </div>
   )
 }
+
+
+
