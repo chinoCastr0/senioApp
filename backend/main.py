@@ -45,7 +45,9 @@ app.mount("/uploads", StaticFiles(directory=str(BASE_UPLOAD_DIR)), name="uploads
 # --- Config de limpieza ---
 RETENTION_SECONDS = 1800  # 30 minutos
 
-
+@app.get("/health", include_in_schema=False)
+def health():
+    return {"ok": True}
 # ======================================
 # Generar PDF de grilla de imágenes
 # ======================================
