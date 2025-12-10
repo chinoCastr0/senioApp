@@ -30,13 +30,23 @@ export const toURL = (path) => {
 
 export const toAbsoluteURL = (u) => (u?.startsWith('http') ? u : toURL(u));
 
+function sleep(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 // Core request con timeout y parseo flexible
 async function request(method, path, {
   headers = {},
   body,
   timeoutMs = 30000,
   responseType = 'json', // 'json' | 'blob' | 'text'
+  retries = 2, //cuantos reintentos extras
+  retryDelayMs = 1000, //delay inicial entre intentos
+  backoffFactor = 1.5, //crece el delay
 } = {}) {
+
+  let attempt = 0;
+
+  while (true) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
 
@@ -45,7 +55,9 @@ async function request(method, path, {
 
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw new Error(`Error ${res.status}: ${text || res.statusText}`);
+      const err = new Error(`Error ${res.status}: ${text || res.statusText}`);
+    err.status = res.status;
+    throw err;
     }
 
     if (responseType === 'blob') return await res.blob();
@@ -53,14 +65,35 @@ async function request(method, path, {
     return await res.json();
   } catch (err) {
     if (err.name === 'AbortError') {
-      throw new Error('La solicitud tardó demasiado (timeout).');
+      const timeoutError = new Error('La solicitud tardó demasiado (timeout).');
+      timeoutError.isTimeout = true;
     }
-    // Log útil para ver la URL final cuando falla
-    console.error(`[API] ${method} ${toURL(path)} →`, err);
-    throw err;
+
+    const status = err.status;
+    const isTimeout = err.isTimeout || err.name ==='AbortError';
+    const isNetworkError = err.name === 'TypeError';
+    const isServerError = typeof status === 'number' && status >= 500 && status < 600;
+
+    const shouldRetry =
+    attempt < retries && (isTimeout || isNetworkError || isServerError);
+
+    if (!shouldRetry){
+      console.error('[API] ${method} ${toURL(path)} →', err);
+      throw err;
+    }
+
+    const delay = retryDelayMs * Math.pow(backoffFactor, attempt);
+    console.warn(
+      '[API] retry ${attempt + 1}/${retries} en ${delay}ms -> ${method} ${toURL(path)}',
+    )
+
+    attempt++;;
+    await sleep(delay);
+// continuar al siguiente intento
   } finally {
     clearTimeout(t);
   }
+}
 }
 
 // ---- Helpers específicos ----
