@@ -88,12 +88,11 @@ export default function Grilla() {
             {/* Acciones */}
             <div className="grid grid-cols-1 gap-2">
               {/* Ver en pestaña (no toma PWA, abre Chrome externo si está instalada) */}
-              <button
+             {/* <button
                 onClick={() => window.open(pdfUrl, '_blank', 'noopener,noreferrer')}
                 className="w-full bg-white text-emerald-900 border border-emerald-600 rounded-xl px-4 py-3 font-semibold hover:bg-emerald-50"
               >
-                Ver en pestaña
-              </button>
+              </button>*/}
 
               {/* Abrir con… (chooser del sistema) */}
               <button

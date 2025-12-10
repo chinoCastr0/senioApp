@@ -19,7 +19,7 @@ export function useGenerarGrillaPDF(base64Procesada, layout) {
   const generar = useCallback(async () => {
     if (!base64Procesada || !layout) return
     setLoading(true); setError(null); setPdfUrl(null)
-    try {
+    try { 
       const blob = dataURLtoBlob(base64Procesada)
       const fd = new FormData()
       fd.append('file', blob, 'recurso.png')

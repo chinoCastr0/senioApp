@@ -34,7 +34,7 @@ export const toAbsoluteURL = (u) => (u?.startsWith('http') ? u : toURL(u));
 async function request(method, path, {
   headers = {},
   body,
-  timeoutMs = 12000,
+  timeoutMs = 30000,
   responseType = 'json', // 'json' | 'blob' | 'text'
 } = {}) {
   const ctrl = new AbortController();
