@@ -37,7 +37,7 @@ function sleep(ms){
 async function request(method, path, {
   headers = {},
   body,
-  timeoutMs = 30000,
+  timeoutMs = 12000,
   responseType = 'json', // 'json' | 'blob' | 'text'
   retries = 2, //cuantos reintentos extras
   retryDelayMs = 1000, //delay inicial entre intentos
@@ -84,7 +84,7 @@ async function request(method, path, {
 
     const delay = retryDelayMs * Math.pow(backoffFactor, attempt);
     console.warn(
-      '[API] retry ${attempt + 1}/${retries} en ${delay}ms -> ${method} ${toURL(path)}',
+      `[API] retry ${attempt + 1}/${retries} en ${delay}ms -> ${method} ${toURL(path)}`,
     )
 
     attempt++;;
