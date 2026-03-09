@@ -28,8 +28,8 @@ def create_photocopy_grid_pdf(image_base64: str, layout_data: dict) -> BytesIO:
         image_bytes = base64.b64decode(base64_data)
         original_image = Image.open(BytesIO(image_bytes)).convert("RGB")
         # Girar la imagen si el width < height 
-        if original_image.height < original_image.width:
-            original_image = original_image.rotate(90, expand=True)
+   #     if original_image.height < original_image.width:
+    #        original_image = original_image.rotate(90, expand=True)
         # Crear PDF
         buffer = BytesIO()
         c = canvas.Canvas(buffer, pagesize=A4)
@@ -37,17 +37,29 @@ def create_photocopy_grid_pdf(image_base64: str, layout_data: dict) -> BytesIO:
         # Calcular filas y columnas
         if cantidad == 1:
             grid_rows, grid_cols = 1, 1
-        elif cantidad == 2:
-            grid_rows, grid_cols = 1, 2
+        if cantidad == 2 and original_image.height < original_image.width:
+                grid_rows, grid_cols = 2, 1
+        elif cantidad == 2 :
+                grid_rows, grid_cols = 1, 2
+        if cantidad == 3 and original_image.height < original_image.width:
+            grid_rows, grid_cols = 3, 1
+        elif cantidad == 3:
+            grid_rows, grid_cols = 1, 3
+        if cantidad == 4 and original_image.height < original_image.width:
+            original_image = original_image.rotate(90, expand=True)
+            grid_rows, grid_cols = 2, 2
         elif cantidad == 4:
             grid_rows, grid_cols = 2, 2
-        elif cantidad == 6:
+        if cantidad == 6 and original_image.height < original_image.width:
             grid_rows, grid_cols = 2, 3
+            original_image = original_image.rotate(90, expand=True)
+        elif cantidad == 6:
+            grid_rows, grid_cols = 3, 2
+        if cantidad == 8 and original_image.height < original_image.width:
+            grid_rows, grid_cols = 4, 2
+           # original_image = original_image.rotate(90, expand=True)
         elif cantidad == 8:
             grid_rows, grid_cols = 2, 4
-        else:
-            grid_rows = int(cantidad ** 0.5)
-            grid_cols = (cantidad + grid_rows - 1) // grid_rows
 
         usable_width = page_width - 2 * margin
         usable_height = page_height - 2 * margin
@@ -74,6 +86,9 @@ def create_photocopy_grid_pdf(image_base64: str, layout_data: dict) -> BytesIO:
                 c.drawImage(img_reader, x, y, width=cell_width, height=cell_height)
                 c.setLineWidth(1)
                 c.rect(x, y, cell_width, cell_height)  # borde
+        
+        
+
 
         c.showPage()
         c.save()

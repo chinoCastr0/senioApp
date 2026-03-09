@@ -7,6 +7,7 @@ import InputArchivo from '../components/ui/InputArchivo'
 import VistaPreviaImagen from '../components/ui/VistaPreviaImagen'
 import useImagenTemporal from '../hooks/useImagenTemporal'
 import { postForm } from '../helpers/api'
+import logo from '../assets/logo.png'
 
 export default function Subida() {
   // ---- Imagen para grilla (flujo actual) ----
@@ -87,8 +88,12 @@ export default function Subida() {
 
   return (
     <div className="bg-emerald-900 min-h-screen flex flex-col items-center justify-center gap-6 p-4">
-      <h1 className="text-white text-2xl font-bold text-center">SEÑO</h1>
-
+      <div
+          className=''>
+        <img src={logo} 
+        className='h-20'
+        alt="" />
+      </div>
       {/* --- Bloque: subir imagen para grilla --- */}
       <div className=" w-full max-w-md bg-white p-4 rounded-xl border border-emerald-200">
         <h1 className="text-black text-xl  mb-1">Subí tu actividad</h1>

@@ -49,7 +49,7 @@ export default function GrillaComunicado() {
     const res = await fetch(url, { method: 'GET', mode: 'cors' })
     if (!res.ok) throw new Error('Respuesta no OK')
     const cd = res.headers.get('content-disposition') || ''
-    const match = /filename\*?=(?:UTF-8'')?\"?([^\";]+)\"?/i.exec(cd)
+    const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd)
     const filename = match ? decodeURIComponent(match[1]) : fallbackName
     const blob = await res.blob()
     return { blob, filename }

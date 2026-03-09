@@ -10,25 +10,25 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "pdfjs-dist": "^5.4.149",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.2"
+    "pdfjs-dist": "^5.5.207",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.25.0",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
-    "@vitejs/plugin-react": "^4.4.1",
-    "autoprefixer": "^10.4.19",
+    "@eslint/js": "^9.39.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.27",
     "css": "^3.0.0",
-    "eslint": "^9.25.0",
+    "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^16.0.0",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.1",
-    "vite": "^6.3.5",
-    "vite-plugin-pwa": "^1.0.3"
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.19",
+    "vite": "^6.4.1",
+    "vite-plugin-pwa": "^1.2.0"
   }
 }

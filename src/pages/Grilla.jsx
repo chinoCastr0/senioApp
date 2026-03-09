@@ -65,8 +65,8 @@ export default function Grilla() {
 
       {!base64 || !layout ? (
         <div className="w-full max-w-md bg-emerald-800/40 p-4 rounded-xl border border-emerald-700 text-emerald-50">
-          <p className="mb-3 text-sm">Faltan datos para generar la grilla.</p>
-          <Link to="/" className="inline-block"><BotonPrimario>Volver</BotonPrimario></Link>
+          <p className="mb-3 text-sm">asdfasdfdsa.</p>
+          <Link to="/" className="inline-block" >Volver al inicio</Link>
         </div>
       ) : loading ? (
         <div className="w-full max-w-md">
@@ -76,7 +76,7 @@ export default function Grilla() {
       ) : error ? (
         <div className="w-full max-w-md bg-emerald-800/40 p-4 rounded-xl border border-emerald-700 text-emerald-50">
           <p className="mb-3 text-sm">{error}</p>
-          <Link to="/" className="inline-block"><BotonPrimario>Volver</BotonPrimario></Link>
+          <Link to="/" className="inline-block" >Volver al inicio</Link>
         </div>
       ) : (
         pdfUrl && (
@@ -88,11 +88,11 @@ export default function Grilla() {
             {/* Acciones */}
             <div className="grid grid-cols-1 gap-2">
               {/* Ver en pestaña (no toma PWA, abre Chrome externo si está instalada) */}
-             {/* <button
+              <button
                 onClick={() => window.open(pdfUrl, '_blank', 'noopener,noreferrer')}
-                className="w-full bg-white text-emerald-900 border border-emerald-600 rounded-xl px-4 py-3 font-semibold hover:bg-emerald-50"
-              >
-              </button>*/}
+                className="hidden md:block w-full bg-white text-emerald-900 border border-emerald-600 rounded-xl px-4 py-3 font-semibold hover:bg-emerald-50"
+              >Abrir en pestaña
+              </button>
 
               {/* Abrir con… (chooser del sistema) */}
               <button

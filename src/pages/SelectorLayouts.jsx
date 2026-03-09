@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 
 import BotonPrimario from '../components/ui/BotonPrimario'
 import BotonVolver from '../components/ui/BotonVolver'
-import { calcularDPI, clasificarCalidad } from '../hooks/CalDPI'
+//import { calcularDPI, clasificarCalidad } from '../hooks/CalDPI'
 import useImagenTemporal from '../hooks/useImagenTemporal'
 
 export default function LayoutSelector() {
@@ -42,17 +42,23 @@ export default function LayoutSelector() {
 
   // Layouts disponibles
   const layouts = useMemo(() => ([
-    { id: 1, titulo: "1 por hoja", cantidad: 1, altoMm: 297,  anchoMm: 210 },
+    //{ id: 1, titulo: "1 por hoja", cantidad: 1, altoMm: 297,  anchoMm: 210 },
     { id: 2, titulo: "2 por hoja", cantidad: 2, altoMm: 148.5, anchoMm: 210 },
+    { id: 3, titulo: "3 por hoja", cantidad: 3, altoMm: 99,   anchoMm: 210 },
     { id: 4, titulo: "4 por hoja", cantidad: 4, altoMm: 148.5, anchoMm: 105 },
     { id: 6, titulo: "6 por hoja", cantidad: 6, altoMm: 99,   anchoMm: 105 },
+    { id: 8, titulo: "8 por hoja", cantidad: 8, altoMm: 74.25,   anchoMm: 105 },
+
   ]), [])
 
   const gridFor = (cantidad) => {
-    if (cantidad === 1) return { rows: 1, cols: 1 }
+   // if (cantidad === 1) return { rows: 1, cols: 1 }
     if (cantidad === 2) return { rows: 2, cols: 1 }
+    if (cantidad === 3) return { rows: 3, cols: 1 }
     if (cantidad === 4) return { rows: 2, cols: 2 }
     if (cantidad === 6) return { rows: 3, cols: 2 }
+    if (cantidad === 8) return { rows: 4, cols: 2 }
+
     return { rows: 1, cols: 1 }
   }
 
@@ -73,8 +79,8 @@ export default function LayoutSelector() {
 
       <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
         {layouts.map((layout) => {
-          const dpi = calcularDPI(dimensiones, layout.anchoMm, layout.altoMm)
-          const calidad = clasificarCalidad(dpi)
+          //const dpi = calcularDPI(dimensiones, layout.anchoMm, layout.altoMm)
+          //const calidad = clasificarCalidad(dpi)
           const { rows, cols } = gridFor(layout.cantidad)
 
           return (
@@ -104,9 +110,9 @@ export default function LayoutSelector() {
                 <p className="text-[12px] text-emerald-700">
                   {layout.cantidad} copia(s) por hoja
                 </p>
-                <p className={`text-[12px] mt-1 font-medium ${calidad.color}`}>
+             {/* <p className={`text-[12px] mt-1 font-medium ${calidad.color}`}>
                   {calidad.texto}
-                </p>
+                </p> */} 
               </div>
 
               <BotonPrimario
