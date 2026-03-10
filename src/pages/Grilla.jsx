@@ -58,7 +58,7 @@ export default function Grilla() {
     <div className="min-h-screen bg-emerald-900 p-6 flex flex-col items-center">
       <BotonVolver />
 
-      <div className="flex items-center gap-2 text-white mb-4">
+      <div className="flex flex-col items-center gap-2 text-white mb-4">
         <span className="text-2xl"></span>
         <h1 className="text-xl font-bold">Grilla finalizada</h1>
         <p className='text-cyan-300'>La primer grilla puede tardar unos minutos</p>
