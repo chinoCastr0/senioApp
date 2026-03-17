@@ -9,7 +9,7 @@ from pathlib import Path
 from math import floor
 
 from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -22,6 +22,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT
 from reportlab.platypus import Paragraph, Frame, KeepInFrame
+
 
 app = FastAPI()
 
@@ -52,14 +53,14 @@ def health():
 # Generar PDF de grilla de imágenes
 # ======================================
 @app.post("/generar-pdf")
-async def generar_pdf(
+def generar_pdf(
     request: Request,
     file: UploadFile = File(...),
     altoMm: float = Form(...),
     anchoMm: float = Form(...),
     cantidad: int = Form(...),
 ):
-    image_bytes = await file.read()
+    image_bytes = file.file.read()
     image_base64 = base64.b64encode(image_bytes).decode("utf-8")
     image_data_url = f"data:{file.content_type};base64,{image_base64}"
 
@@ -89,7 +90,7 @@ async def generar_pdf(
 # Generar comunicado en 2 columnas
 # ======================================
 @app.post("/generar-comunicado")
-async def generar_comunicado(
+def generar_comunicado(
     request: Request,
     texto: str = Form(...)
 ):
@@ -170,9 +171,16 @@ async def generar_comunicado(
 # ======================================
 @app.get("/download/{filename}")
 async def download_pdf(filename: str):
-    path = PDFS_DIR / filename
-    if not path.exists():
+    path = (PDFS_DIR / filename).resolve()
+    if not path.is_relative_to(PDFS_DIR.resolve()) or not path.exists():
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
+
+    return FileResponse(
+        path=path,
+        filename=filename,
+        media_Type="application/octet-stream",
+        headers = {"Acces-control-Expose-Headers":"Content-Disposition"}
+    )
 
     def iterfile():
         with open(path, "rb") as f:

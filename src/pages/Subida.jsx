@@ -8,6 +8,8 @@ import VistaPreviaImagen from '../components/ui/VistaPreviaImagen'
 import useImagenTemporal from '../hooks/useImagenTemporal'
 import { postForm } from '../helpers/api'
 import logo from '../assets/logo.png'
+import imageCompression from 'browser-image-compression'
+
 
 export default function Subida() {
   // ---- Imagen para grilla (flujo actual) ----
@@ -19,14 +21,36 @@ export default function Subida() {
 
   const { setOriginalBase64Once, clearAll } = useImagenTemporal()
 
-  const manejarArchivo = (archivoSel) => {
-    setArchivo(archivoSel)
+  async function compresionImagen(archivo){
+    const archivoOriginal = archivo
+
+    console.log (`Peso original: ${(archivoOriginal.size / 1024 / 1024).toFixed(2)}MB`);
+    const opciones = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+
+    try {
+      const archivoComprimido = await imageCompression(archivoOriginal, opciones);
+      
+      console.log(`Peso nuevo: ${(archivoComprimido.size / 1024 / 1024).toFixed(2)} MB`);
+      return archivoComprimido
+    } catch (error){
+      console.log("fallo compresion", error);
+    }
+  }
+
+  async function manejarArchivo (archivoSel) {
+    
 
     if (archivoSel && archivoSel.type.startsWith('image/')) {
       clearAll?.()
       setListoBase64(false)
       setUltimoBase64(null)
-
+      const archCompreso = await compresionImagen(archivoSel)
+      setArchivo(archCompreso)
+      
       const lector = new FileReader()
       lector.onload = () => {
         const b64 = lector.result
@@ -34,7 +58,7 @@ export default function Subida() {
         setOriginalBase64Once?.(b64)
         setListoBase64(true)
       }
-      lector.readAsDataURL(archivoSel)
+      lector.readAsDataURL(archCompreso)
     }
   }
 
