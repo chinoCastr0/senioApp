@@ -120,7 +120,7 @@ export default function Subida() {
       </div>
       {/* --- Bloque: subir imagen para grilla --- */}
       <div className=" w-full max-w-md bg-white p-4 rounded-xl border border-emerald-200">
-        <h1 className="text-black text-xl  mb-1">Subí tu actividad</h1>
+        <h1 className="text-black text-xl  mb-1">Subí tu actividad para niños</h1>
         <h3 className="text-gray-950 text-lg mb-4">Subi una imagen para crear una grilla lista para recortar. </h3>
         <p className="text-black text-sm mb-4 bg-yellow-200 p-3">📷 Tip: asegurate de que la imagen esté clara y se lea bien antes de subirla. </p>
 
