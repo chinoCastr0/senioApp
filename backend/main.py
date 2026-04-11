@@ -1,4 +1,3 @@
-# main.py
 import os
 import uuid
 import base64
@@ -15,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from utils.pdf_creator import create_photocopy_grid_pdf
 
-# --- Imports para generar comunicado ---
+# Imports para generar comunicado
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -26,16 +25,17 @@ from reportlab.platypus import Paragraph, Frame, KeepInFrame
 
 app = FastAPI()
 
-# --- CORS ---
+# CORS:
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # en prod, limitar a dominios propios
+    allow_origins=["https://senio-app.vercel.app",
+                   "http://localhost:5173"],  # al agregar dominios borrar la / final
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Storage ---
+# Memoria 
 BASE_UPLOAD_DIR = Path("uploads")
 PDFS_DIR = BASE_UPLOAD_DIR / "pdfs"
 PDFS_DIR.mkdir(parents=True, exist_ok=True)
@@ -86,9 +86,7 @@ def generar_pdf(
     })
 
 
-# ======================================
 # Generar comunicado en 2 columnas
-# ======================================
 @app.post("/generar-comunicado")
 def generar_comunicado(
     request: Request,
@@ -166,9 +164,8 @@ def generar_comunicado(
     })
 
 
-# ======================================
 # Forzar descarga en dispositivo (evita visor/Drive)
-# ======================================
+
 @app.get("/download/{filename}")
 async def download_pdf(filename: str):
     path = (PDFS_DIR / filename).resolve()
@@ -201,9 +198,8 @@ async def download_pdf(filename: str):
     return StreamingResponse(iterfile(), media_type="application/octet-stream", headers=headers)
 
 
-# ======================================
 # Limpieza de PDFs viejos
-# ======================================
+
 async def _sweeper_loop():
     while True:
         now = time.time()
