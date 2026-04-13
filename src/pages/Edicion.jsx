@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import BotonPrimario from "../components/ui/BotonPrimario";
 import BotonVolver from "../components/ui/BotonVolver";
-import useImagenTemporal from "../hooks/useImagenTemporal";
+import {useImagenTemporal} from "../hooks/ImageContext";
 import { aplicarFiltroCanvas } from "../hooks/aplicarFiltroCanvas";
 
 // Filtros
@@ -30,12 +30,7 @@ export default function Edicion() {
   const location = useLocation();
 
   // Hook con compat y flag de carga lista
-  const {
-    originalBase64,
-    base64: legacyBase64,
-    setOriginalBase64Once,
-    ready,
-  } = useImagenTemporal();
+  const [imagenBlob, setImagenBlob] = useImagenTemporal();
 
   // Fallback si venís directo de LayoutSelector pasando la imagen
   const base64FromState = location.state?.base64Tmp || null;

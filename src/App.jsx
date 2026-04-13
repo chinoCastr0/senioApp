@@ -4,8 +4,11 @@ import Edicion from './pages/Edicion'
 import Grilla from './pages/Grilla'
 import LayoutSelector from './pages/SelectorLayouts'
 import GrillaComunicado from './pages/GrillaComunicado'
+import {ImageProvider} from './hooks/ImageContext.jsx'
+
 function App(){
   return (
+    <ImageProvider>
     <Routes>
       <Route path = "/" element = {<Subida />} />
       <Route path = "/editar" element={<Edicion />} /> 
@@ -13,6 +16,7 @@ function App(){
       <Route path = "/layouts" element={<LayoutSelector />} />
       <Route path = "/grilla-comunicado" element={<GrillaComunicado />} />
     </Routes>
+    </ImageProvider>
   )
 }
 

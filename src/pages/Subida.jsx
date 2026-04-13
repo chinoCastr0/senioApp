@@ -1,25 +1,23 @@
 // src/pages/Subida.jsx
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {useImagenTemporal} from '../hooks/ImageContext'
+
 
 import BotonPrimario from '../components/ui/BotonPrimario'
 import InputArchivo from '../components/ui/InputArchivo'
 import VistaPreviaImagen from '../components/ui/VistaPreviaImagen'
-import useImagenTemporal from '../hooks/useImagenTemporal'
 import { postForm } from '../helpers/api'
 import logo from '../assets/logo.png'
 import imageCompression from 'browser-image-compression'
 
 
 export default function Subida() {
-  // ---- Imagen para grilla (flujo actual) ----
-  const [archivo, setArchivo] = useState(null)
+  //Imagen para grilla 
   const [preview, setPreview] = useState(null)
-  const [ultimoBase64, setUltimoBase64] = useState(null)
-  const [listoBase64, setListoBase64] = useState(false)
+  const {imagenBlob, setImagenBlob} = useImagenTemporal();
+  const [listoImg, setListoImg] = useState()
   const navigate = useNavigate()
-
-  const { setOriginalBase64Once, clearAll } = useImagenTemporal()
 
   async function compresionImagen(archivo){
     const archivoOriginal = archivo
@@ -43,40 +41,30 @@ export default function Subida() {
 
   async function manejarArchivo (archivoSel) {
     
-
     if (archivoSel && archivoSel.type.startsWith('image/')) {
-      clearAll?.()
-      setListoBase64(false)
-      setUltimoBase64(null)
+  
       const archCompreso = await compresionImagen(archivoSel)
-      setArchivo(archCompreso)
-      
-      const lector = new FileReader()
-      lector.onload = () => {
-        const b64 = lector.result
-        setUltimoBase64(b64)
-        setOriginalBase64Once?.(b64)
-        setListoBase64(true)
-      }
-      lector.readAsDataURL(archCompreso)
-    }
-  }
+      setImagenBlob(archCompreso)
+        setListoImg(true)
 
-  useEffect(() => {
-    if (archivo && archivo.type.startsWith('image/')) {
-      const url = URL.createObjectURL(archivo)
+  }
+  }
+  useEffect(() => { //preview de subida
+    if (imagenBlob && imagenBlob.type.startsWith('image/')) {
+      const url = URL.createObjectURL(imagenBlob)
       setPreview(url)
       return () => URL.revokeObjectURL(url)
     } else {
       setPreview(null)
     }
-  }, [archivo])
+  }, [imagenBlob])
+
 
   function irALayouts() {
-    navigate('/layouts', { state: { base64Tmp: ultimoBase64 } })
+    navigate('/layouts')
   }
 
-  // ---- Comunicado rápido (nuevo, inline) ----
+  // Comunicado 
   const [texto, setTexto] = useState('')
   const [cargandoCom, setCargandoCom] = useState(false)
   const [errorCom, setErrorCom] = useState('')
@@ -94,7 +82,7 @@ export default function Subida() {
       fd.append('texto', texto)
       const data = await postForm('/generar-comunicado', fd)
 
-      // Antes mandabas solo pdf; ahora incluimos download.
+
       const pdf = data?.pdf_url || data?.preview_url
       const download = data?.download_url || null
 
@@ -118,7 +106,8 @@ export default function Subida() {
         className='h-20'
         alt="" />
       </div>
-      {/* --- Bloque: subir imagen para grilla --- */}
+            {/*Bloque: grilla  */}
+
       <div className=" w-full max-w-md bg-white p-4 rounded-xl border border-emerald-200">
         <h1 className="text-black text-xl  mb-1">Subí tu actividad para niños</h1>
         <h3 className="text-gray-950 text-lg mb-4">Subi una imagen para crear una grilla lista para recortar. </h3>
@@ -139,17 +128,14 @@ export default function Subida() {
           <BotonPrimario
             div
             className="w-full"
-            texto={listoBase64 ? "Crear grilla →" : "Leyendo imagen…"}
+            texto={listoImg ? "Crear grilla →" : "Inserte imagen"}
             onClick={irALayouts}
-            disabled={!archivo || !listoBase64}
+            disabled={!imagenBlob || !listoImg}
           />
         </div>
       </div>
 
-      {/* separador visual */}
-      <div className="text-gray-900 font-serif text-6xl opacity-70 hidden"></div>
-
-      {/* --- Bloque: comunicado rápido --- */}
+      {/*Bloque: comunicado  */}
       <div className="w-full max-w-md bg-white p-4 rounded-xl border border-emerald-200">
         <h2 className="text-black text-lg mb-2">Comunicado rápido</h2>
         <form onSubmit={generarComunicado} className="space-y-3">
@@ -177,6 +163,3 @@ export default function Subida() {
     </div>
   )
 }
-
-
-

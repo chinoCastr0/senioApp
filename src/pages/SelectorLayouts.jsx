@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import BotonPrimario from '../components/ui/BotonPrimario'
 import BotonVolver from '../components/ui/BotonVolver'
 //import { calcularDPI, clasificarCalidad } from '../hooks/CalDPI'
-import useImagenTemporal from '../hooks/useImagenTemporal'
+import {useImagenTemporal} from '../hooks/ImageContext'
 
 export default function LayoutSelector() {
   const navigate = useNavigate()

@@ -1,6 +1,4 @@
-import os
 import uuid
-import base64
 import time
 import asyncio
 from io import BytesIO
@@ -12,7 +10,7 @@ from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from utils.pdf_creator import create_photocopy_grid_pdf
+from utils.pdf_creator import create_photocopy_grid_pdf #IMPORT DE CREADOR DE PDF
 
 # Imports para generar comunicado
 from reportlab.lib.pagesizes import A4
@@ -35,7 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Memoria 
+# Se crea la direccion donde se guardan los pdf
 BASE_UPLOAD_DIR = Path("uploads")
 PDFS_DIR = BASE_UPLOAD_DIR / "pdfs"
 PDFS_DIR.mkdir(parents=True, exist_ok=True)
@@ -43,15 +41,15 @@ PDFS_DIR.mkdir(parents=True, exist_ok=True)
 # Montar /uploads para servir estáticos (lo usa el visor PDF del front)
 app.mount("/uploads", StaticFiles(directory=str(BASE_UPLOAD_DIR)), name="uploads")
 
-# --- Config de limpieza ---
-RETENTION_SECONDS = 1800  # 30 minutos
+# Config de limpieza
+RETENTION_SECONDS = 180  # 3 minutos
 
 @app.get("/health", include_in_schema=False)
 def health():
     return {"ok": True}
-# ======================================
+
 # Generar PDF de grilla de imágenes
-# ======================================
+
 @app.post("/generar-pdf")
 def generar_pdf(
     request: Request,
@@ -61,12 +59,11 @@ def generar_pdf(
     cantidad: int = Form(...),
 ):
     image_bytes = file.file.read()
-    image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-    image_data_url = f"data:{file.content_type};base64,{image_base64}"
+
 
     layout_data = {"altoMm": altoMm, "anchoMm": anchoMm, "cantidad": cantidad}
 
-    pdf_buffer: BytesIO = create_photocopy_grid_pdf(image_data_url, layout_data)
+    pdf_buffer: BytesIO = create_photocopy_grid_pdf(image_bytes, layout_data)
 
     filename = f"grilla_{uuid.uuid4().hex}.pdf"
     disk_path = PDFS_DIR / filename
@@ -178,25 +175,6 @@ async def download_pdf(filename: str):
         media_Type="application/octet-stream",
         headers = {"Acces-control-Expose-Headers":"Content-Disposition"}
     )
-
-    def iterfile():
-        with open(path, "rb") as f:
-            while True:
-                chunk = f.read(1024 * 64)
-                if not chunk:
-                    break
-                yield chunk
-
-    headers = {
-        "Content-Disposition": f'attachment; filename="{filename}"',
-        "X-Content-Type-Options": "nosniff",
-        "Cache-Control": "no-store",
-        # ⬇️ Exponer Content-Disposition para que el front pueda leer el nombre
-        "Access-Control-Expose-Headers": "Content-Disposition",
-    }
-    # octet-stream para que Android no lo abra, sino lo descargue
-    return StreamingResponse(iterfile(), media_type="application/octet-stream", headers=headers)
-
 
 # Limpieza de PDFs viejos
 

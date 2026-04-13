@@ -1,12 +1,12 @@
-
+#ACA SE CREAN LOS GRID DE CADA OPCION DE LAYOUT USANDO REPORTLAB
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from PIL import Image
-import base64
 
-def create_photocopy_grid_pdf(image_base64: str, layout_data: dict) -> BytesIO:
+
+def create_photocopy_grid_pdf(image_bytes: str, layout_data: dict) -> BytesIO:
     try:
         # Tamaño A4 en puntos
         page_width, page_height = A4
@@ -23,9 +23,8 @@ def create_photocopy_grid_pdf(image_base64: str, layout_data: dict) -> BytesIO:
         except (KeyError, TypeError, ValueError):
             raise ValueError("Datos de layout inválidos.")
 
-        # Decodificar imagen base64
-        base64_data = image_base64.split(",")[1] if "," in image_base64 else image_base64
-        image_bytes = base64.b64decode(base64_data)
+       
+
         original_image = Image.open(BytesIO(image_bytes)).convert("RGB")
         # Girar la imagen si el width < height 
    #     if original_image.height < original_image.width:
