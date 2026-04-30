@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import {  useNavigate, useLocation } from "react-router-dom";
 
 import BotonPrimario from "../components/ui/BotonPrimario";
 import BotonVolver from "../components/ui/BotonVolver";
@@ -27,31 +27,28 @@ const claseFiltroPreview = (id) => {
 
 export default function Edicion() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation()
 
-  // Hook con compat y flag de carga lista
-  const [imagenBlob, setImagenBlob] = useImagenTemporal();
+  const layoutSeleccionado = location?.state;
 
-  // Fallback si venís directo de LayoutSelector pasando la imagen
-  const base64FromState = location.state?.base64Tmp || null;
-  const layoutSeleccionado = location.state?.layoutSeleccionado || null;
+  // Hook contextapi
+  const {imagenBlob} = useImagenTemporal();
 
-  // Fuente final de imagen (hook > legacy > state)
-  const imgBase64 = originalBase64 || legacyBase64 || base64FromState;
+  const imgBlobUrl = useMemo(() => {
+    if (!imagenBlob) return null;
+    return URL.createObjectURL(imagenBlob);
+  }, [imagenBlob]);
 
-  // Si vino por state y aún no está persistida como original, persistimos ahora
   useEffect(() => {
-    if (!originalBase64 && base64FromState && typeof setOriginalBase64Once === "function") {
-      setOriginalBase64Once(base64FromState);
-    }
-  }, [originalBase64, base64FromState, setOriginalBase64Once]);
+    return () => { if (imgBlobUrl) URL.revokeObjectURL(imgBlobUrl); };
+  }, [imgBlobUrl]);
 
   // Solo redirige a /subida cuando el hook ya está listo y no hay imagen por ningún lado
   useEffect(() => {
-    if (ready && !imgBase64) {
+    if (!imagenBlob) {
       navigate("/subida", { replace: true });
     }
-  }, [ready, imgBase64, navigate]);
+  }, [ imagenBlob, navigate]);
 
   const [filtro, setFiltro] = useState("ninguno");
   const [procesando, setProcesando] = useState(false);
@@ -60,18 +57,19 @@ export default function Edicion() {
   const clasePreview = useMemo(() => claseFiltroPreview(filtro), [filtro]);
 
   const handleConfirmar = async () => {
-    if (!imgBase64) return;
+    if (!imagenBlob) return;
     setProcesando(true);
     setError("");
 
     try {
-      // Hornea solo al confirmar (no destructivo)
-      const base64Procesada =
-        filtro === "ninguno" ? imgBase64 : await aplicarFiltroCanvas(imgBase64, filtro);
+
+      const imagenFinal = filtro === "ninguno" 
+      ? imagenBlob 
+      : await aplicarFiltroCanvas(imagenBlob, filtro);
 
       // Enviamos a Grilla por state. NO escribimos en storage.
       navigate("/grilla", {
-        state: { base64Procesada, layoutSeleccionado, filtroAplicado: filtro },
+        state: { layoutSeleccionado, imagenFinal },
       });
     } catch (e) {
       console.error(e);
@@ -81,7 +79,7 @@ export default function Edicion() {
     }
   };
 
-  if (!ready || !imgBase64) {
+  if (!imagenBlob) {
     return (
       <main className="min-h-screen bg-emerald-900 text-white p-4">
         <p className="text-center opacity-80 mt-10">Cargando imagen…</p>
@@ -101,9 +99,9 @@ export default function Edicion() {
       {/* Preview */}
       <div className="mb-4 max-w-md mx-auto">
         <div className="rounded-2xl border border-emerald-700 p-2 bg-emerald-800/30">
-          <div className="w-full max-h-[420px] overflow-hidden rounded-xl bg-emerald-900">
+          <div className="w-full max-h-auto overflow-hidden rounded-xl bg-emerald-900">
             <img
-              src={imgBase64}
+              src={imgBlobUrl}
               alt="Preview"
               className={`w-full h-full object-contain ${clasePreview}`}
               draggable={false}
@@ -148,7 +146,7 @@ export default function Edicion() {
             className="w-full h-12 text-base"
             onClick={handleConfirmar}
             texto={procesando ? "Aplicando filtro..." : "Ir a la grilla"}
-            disabled={!imgBase64 || procesando}
+            disabled={!imagenBlob || procesando}
           />
           <p className="text-[11px] text-emerald-200 mt-2 text-center">
           

@@ -42,7 +42,7 @@ PDFS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(BASE_UPLOAD_DIR)), name="uploads")
 
 # Config de limpieza
-RETENTION_SECONDS = 180  # 3 minutos
+RETENTION_SECONDS = 1800  # 3 minutos
 
 @app.get("/health", include_in_schema=False)
 def health():
@@ -172,8 +172,8 @@ async def download_pdf(filename: str):
     return FileResponse(
         path=path,
         filename=filename,
-        media_Type="application/octet-stream",
-        headers = {"Acces-control-Expose-Headers":"Content-Disposition"}
+        media_type="application/octet-stream",
+        headers = {"Access-control-Expose-Headers":"Content-Disposition"}
     )
 
 # Limpieza de PDFs viejos

@@ -1,44 +1,43 @@
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate} from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
 
 import BotonPrimario from '../components/ui/BotonPrimario'
 import BotonVolver from '../components/ui/BotonVolver'
-//import { calcularDPI, clasificarCalidad } from '../hooks/CalDPI'
 import {useImagenTemporal} from '../hooks/ImageContext'
 
 export default function LayoutSelector() {
   const navigate = useNavigate()
-  const location = useLocation()
-
-  const { originalBase64, base64: legacyBase64, setOriginalBase64Once } = useImagenTemporal()
-  const base64FromState = location.state?.base64Tmp || null
-
-  // Fuente final de imagen (hook primero; si no, state)
-  const imgBase64 = originalBase64 || legacyBase64 || base64FromState
-
+  const { imagenBlob } = useImagenTemporal()
+  console.log('imagen del hook;', imagenBlob)
+  
   const [dimensiones, setDimensiones] = useState(null)
 
   // Si no hay imagen en ningún lado, volver a Subida
   useEffect(() => {
-    if (!imgBase64) {
+    if (!imagenBlob) {
       navigate('/', { replace: true })
     }
-  }, [imgBase64, navigate])
+  }, [imagenBlob, navigate])
 
   // Si vino por state (fallback) y aún no está persistida como original, persistimos ahora
-  useEffect(() => {
-    if (!originalBase64 && base64FromState && typeof setOriginalBase64Once === 'function') {
-      setOriginalBase64Once(base64FromState)
-    }
-  }, [originalBase64, base64FromState, setOriginalBase64Once])
+  // useEffect(() => {
+  //   if (!originalBase64 && base64FromState && typeof setOriginalBase64Once === 'function') {
+  //     setOriginalBase64Once(base64FromState)
+  //   }
+  // }, [originalBase64, base64FromState, setOriginalBase64Once])
 
   // Extraer dimensiones de la imagen base64
   useEffect(() => {
-    if (!imgBase64) return
+    if (!imagenBlob ) return
+    const blobUrl = URL.createObjectURL(imagenBlob)
     const img = new Image()
-    img.onload = () => setDimensiones({ width: img.width, height: img.height })
-    img.src = imgBase64
-  }, [imgBase64])
+    img.src = blobUrl
+    img.onload = () =>{ 
+      setDimensiones({ width: img.width, height: img.height} )
+      URL.revokeObjectURL(blobUrl)
+    }
+    
+  }, [ imagenBlob])
 
   // Layouts disponibles
   const layouts = useMemo(() => ([
@@ -63,10 +62,10 @@ export default function LayoutSelector() {
   }
 
   const handleSeleccion = (layout) => {
-    navigate('/editar', { state: { layoutSeleccionado: layout, base65Tmp:imgBase64 } })
+    navigate('/editar', { state: { layoutSeleccionado: layout} })
   }
 
-  if (!imgBase64 || !dimensiones) {
+  if (!imagenBlob || !dimensiones) {
     return <p className="text-center text-gray-200 mt-10">Cargando imagen...</p>
   }
 

@@ -5,7 +5,8 @@ import Grilla from './pages/Grilla'
 import LayoutSelector from './pages/SelectorLayouts'
 import GrillaComunicado from './pages/GrillaComunicado'
 import {ImageProvider} from './hooks/ImageContext.jsx'
-
+import 'react-pdf/dist/Page/TextLayer.css'
+import 'react-pdf/dist/Page/AnnotationLayer.css'
 function App(){
   return (
     <ImageProvider>

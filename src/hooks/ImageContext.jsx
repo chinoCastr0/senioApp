@@ -10,6 +10,7 @@ export function ImageProvider({ children }) {
    <ImagenContext.Provider value = {{imagenBlob, setImagenBlob}}>
     {children}
    </ImagenContext.Provider>
+
   );
 }
 // eslint-disable-next-line react-refresh/only-export-components

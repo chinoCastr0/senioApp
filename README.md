@@ -1,147 +1,186 @@
-﻿[Leer en Español](README.es.md)
+[Leer en Español](README.es.md)
 
-# Seño — Printable Grids and Quick Notices for Teachers
+# Seño — Mobile-first PDF tools for teachers
 
-A mobile-first PWA plus a lightweight FastAPI service that helps teachers turn a single activity image into a printable grid (2/3/4/6/8 per A4) and generate simple two-column “comunicados” ready to print and send home. The UI is Spanish; the README is in English for portfolio clarity.
+Seño is a mobile-first PWA for teachers who need printable classroom material without opening a desktop editor. It turns one activity image into a cut-ready A4 grid and generates repeated family notices ("comunicados") as clean PDFs.
 
-**Why it exists**
-- In school reality, teachers often need to duplicate a small activity across a whole class quickly and print it cut-ready. Many tools require a laptop, fiddly editors, or produce fuzzy results. This app does it from a phone in minutes with DPI-clean PDFs.
-- For quick communication to families, it generates a compact, repeated message sheet (“comunicado”) that prints cleanly and is easy to cut.
+The project combines a React/Vite frontend with a FastAPI backend that renders print-ready documents with ReportLab and Pillow. The product is intentionally narrow: upload, choose a layout, preview, download or share.
 
-**Live Architecture Snapshot**
-- Frontend: React 19 + Vite 6 + Tailwind + pdf.js + PWA. See `src/`, `vite.config.js:10`, `src/main.jsx:6`, `src/lib/pdfjs.js:4`.
-- Backend: FastAPI with ReportLab and Pillow. See `backend/main.py:55`, `backend/main.py:92`, `backend/main.py:172`.
+**Portfolio Focus**
 
+This project shows a complete small-product workflow: user research from a real classroom pain point, mobile UX, file handling, image processing, PDF generation, PWA setup, API integration, and deployment-oriented decisions.
 
-**Problem Solved**
-- Produce crisp, printable A4 grids from a single image without desktop apps.
-- Generate a repeated two-column message (“comunicado”) that fits many students per page.
-- Work reliably on phones (Android first) with offline support and easy “Open with…/Share”.
+**Problem**
 
+Teachers often need to duplicate a worksheet, label, or small activity for an entire class and print it in a format that is easy to cut. General-purpose tools work, but they are slow on phones, require manual layout work, or produce blurry print output.
 
-**Key Features**
-- Image ? Grid PDF
-  - Upload, on-device compression, quick preview, optional filters (grayscale/B&W) for cleaner prints.
-  - Layouts: 2, 3, 4, 6 or 8 per A4 with sensible orientation logic.
-  - Server-side PDF generation yields sharp vectors/rasters at print time.
-- “Comunicado” generator
-  - Type the message; backend builds a two-column layout repeated down the page.
-  - Preview in-app; then open/share/download as needed.
+Seño solves that with a guided flow:
+
+1. Upload an activity image.
+2. Choose how many copies should fit on an A4 page.
+3. Optionally apply a print-friendly filter.
+4. Generate a PDF preview.
+5. Download it or open it with a native print/share app.
+
+**Main Features**
+
+- Image-to-grid PDF generation
+  - Supports 2, 3, 4, 6 and 8 copies per A4 page.
+  - Compresses uploaded images in the browser before sending them.
+  - Applies optional grayscale or high-contrast black-and-white filters.
+  - Generates crop borders for cutting.
+- Quick notice generator
+  - Accepts a text message and repeats it in a two-column A4 layout.
+  - Produces a downloadable PDF for school-family communication.
 - Mobile-first PWA
-  - Service Worker auto-update; manifest + maskable icons; SPA fallback configured. See `vite.config.js:10`, `public/manifest.webmanifest:2`, `vercel.json:1`, `src/main.jsx:6`.
-- PDF preview and sharing
-  - In-app preview via pdf.js workers. See `src/lib/pdfjs.js:4`.
-  - Android “Open with…” via Web Share API with fallbacks to new tab or download.
-- Low-friction backend
-  - Simple FastAPI endpoints: `/generar-pdf`, `/generar-comunicado`, and `/download/{filename}`. See `backend/main.py:55`, `backend/main.py:92`, `backend/main.py:172`.
-  - Ephemeral storage with background sweeper; defaults to 30 minutes. See `backend/main.py:47`, `backend/main.py:225`.
+  - Installable app experience with manifest, icons and service worker.
+  - Designed around Android phone usage and quick classroom workflows.
+- PDF preview
+  - Uses `react-pdf`/pdf.js to render the generated PDF inside the app.
+  - Adjusts preview width responsively with `ResizeObserver`.
+- Sharing and download flow
+  - Download helper fetches the PDF as a blob and triggers a file download.
+  - Share helper uses the Web Share API when the browser supports PDF files.
+- API resiliency
+  - Centralized `fetch` helper with timeouts, retries and absolute URL handling.
+  - `VITE_API_URL` support for local, phone-over-Wi-Fi and production setups.
 
+**Tech Stack**
 
-**Architecture Decisions**
-- Server-side PDF instead of client canvas
-  - Mobile browsers struggle with large canvases and produce fuzzy prints. ReportLab gives deterministic mm?pt layout and print-ready output.
-- Keep uploads ephemeral on local disk
-  - Avoids introducing S3/GCS and access control for the MVP. A background sweeper deletes old PDFs.
-- PWA with runtime caching
-  - Cache static assets and external images; keep API responses network-first to avoid stale PDFs. See `vite.config.js:23`.
-- Simple client state
-  - Use React state + `localStorage` for the original base64 so navigation between steps is robust. See `src/hooks/useImagenTemporal.jsx`.
-- Force real downloads when needed
-  - A dedicated `/download/{filename}` endpoint returns `application/octet-stream` and exposes `Content-Disposition` so Android lets users open in native print/share apps. See `backend/main.py:172`.
+- Frontend: React 19, Vite 6, React Router, Tailwind CSS, `react-pdf`, `browser-image-compression`, Vite PWA.
+- Backend: FastAPI, ReportLab, Pillow, Uvicorn.
+- Deployment targets: Vercel for the frontend and a small VM or similar service for the FastAPI API.
 
+**Architecture**
 
-**Trade-offs and Limitations**
-- Ephemeral files only
-  - Multi-instance deployments need shared storage or a single writer; otherwise a different instance may not see a just-created PDF.
-- Heavy Python deps
-  - ReportLab/Pillow enlarge the image; cold start times are higher on tiny instances.
-- Web Share API coverage
-  - Not all browsers (notably some iOS versions) support file sharing; fallbacks open a new tab or trigger download.
-- CORS is wide open by default
-  - `allow_origins=["*"]` eases dev; in production this must be restricted to frontend domains.
+```text
+React PWA
+  ├─ upload/compress image in browser
+  ├─ choose A4 layout
+  ├─ apply optional canvas filter
+  ├─ POST multipart form data to FastAPI
+  ├─ preview generated PDF with react-pdf
+  └─ download/share generated file
 
+FastAPI
+  ├─ /generar-pdf
+  │   └─ ReportLab + Pillow render the image grid PDF
+  ├─ /generar-comunicado
+  │   └─ ReportLab renders repeated text blocks
+  ├─ /uploads/pdfs/*
+  │   └─ static preview files
+  ├─ /download/{filename}
+  │   └─ attachment-style PDF download
+  └─ background sweeper
+      └─ deletes old generated PDFs
+```
 
-**How It Works (End-to-End)**
-- Frontend
-  - Select an image on `Subida` ? compress in-browser (`browser-image-compression`).
-  - Choose a layout on `SelectorLayouts` ? optional non-destructive filters on `Edicion`.
-  - Generate the grid on `Grilla`: base64 is posted to `/generar-pdf`; result is previewed with pdf.js and can be shared.
-  - Quick “Comunicado”: send text to `/generar-comunicado` and preview on `GrillaComunicado`.
-  - Base API URL is auto-detected from `VITE_API_URL` or falls back to `proto://host:8000`. See `src/helpers/api.js:3` and `src/helpers/api.js:20`.
-- Backend
-  - `/generar-pdf`: decodes the image, computes rows/cols from the requested quantity, draws cells + crop borders, writes PDF to `uploads/pdfs/` and returns URLs. See `backend/main.py:55`.
-  - `/generar-comunicado`: lays out the message in repeated two-column blocks sized to the page. See `backend/main.py:92`.
-  - `/download/{filename}`: forces attachment download and exposes headers for the frontend. See `backend/main.py:172`.
-  - A sweeper removes files older than `RETENTION_SECONDS` (30 min). See `backend/main.py:47`, `backend/main.py:225`.
+**Key Implementation Details**
 
+- The frontend keeps the selected image as a `Blob` in React context (`src/hooks/ImageContext.jsx`) so the user can move between the upload, layout, edit and preview screens without serializing large base64 strings.
+- `src/hooks/aplicarFiltroCanvas.jsx` applies grayscale and high-contrast filters only when the user confirms the edit, keeping the preview interaction lightweight.
+- `src/hooks/useGenerarGrillaPDF.js` sends the final image and layout dimensions as `FormData` to the backend.
+- `backend/utils/pdf_creator.py` computes the grid, resizes the image to print-friendly dimensions and draws borders on an A4 canvas.
+- `src/helpers/api.js` centralizes API URL detection, retry behavior and timeout handling.
+- `vite.config.js` configures PWA generation, static asset caching, path aliases and the pdf.js worker dependency used by `react-pdf`.
 
-**Local Setup**
-- Prerequisites
-  - Node.js 18+ and npm (or pnpm)
-  - Python 3.11+ and pip
-- Backend (FastAPI)
-  - `cd backend`
-  - `python -m venv .venv && . .venv/Scripts/Activate` (Windows) or `. .venv/bin/activate` (Unix)
-  - `pip install -r requirements.txt`
-  - `uvicorn main:app --reload --host 0.0.0.0 --port 8000`
-- Frontend (Vite)
-  - From repo root: `npm install`
-  - Configure API base:
-    - Easiest: create `./.env.development` with `VITE_API_URL=http://localhost:8000` (a sample is already present).
-    - If running on a phone over Wi-Fi, point to your machine IP, e.g. `VITE_API_URL=http://192.168.1.10:8000`.
-  - `npm run dev` then open `http://localhost:5173`
+**Product Decisions**
 
-
-**Deployment Setup**
-- Frontend on Vercel
-  - The SPA fallback is configured in `vercel.json:1`. Build with `vite build` and output `dist/` (Vercel auto-detects).
-  - Set the env var `VITE_API_URL` to your backend’s public base URL.
-- Backend on a small VM (what I use)
-  - Create a Python venv, `pip install -r backend/requirements.txt`.
-  - Run behind a reverse proxy (Caddy/Nginx) pointing `api.<your-domain>` to `127.0.0.1:8000`.
-  - Persist the `backend/uploads/` directory (or mount a small volume). Tune `RETENTION_SECONDS` as needed.
-  - Restrict CORS to your frontend origin(s) in `backend/main.py:30`.
-  - Production command example: `uvicorn main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips="*"`.
-
+- Server-side PDF generation
+  - Large client-side canvases were not reliable enough for crisp printing on phones. ReportLab gives deterministic A4 measurements and stable PDF output.
+- Short, guided flow
+  - The app avoids a full editor. Teachers get a fixed set of useful layouts and can finish the task quickly.
+- Ephemeral storage
+  - Generated PDFs are written to local disk and cleaned by a background task. This keeps the MVP simple while avoiding long-term storage of classroom material.
+- Mobile-first sharing
+  - The UI prioritizes "open with", download and native print flows over desktop-style file management.
 
 **API**
-- `POST /generar-pdf` ? `{ pdf_url, download_url, filename }`
-- `POST /generar-comunicado` ? `{ pdf_url, preview_url, download_url, filename }`
-- `GET /download/{filename}` ? octet-stream attachment
-- `GET /health` ? `{ ok: true }`
 
+- `GET /health` -> `{ ok: true }`
+- `POST /generar-pdf` -> `{ pdf_url, pdf_path, filename, download_url }`
+- `POST /generar-comunicado` -> `{ pdf_url, preview_url, pdf_path, filename, download_url }`
+- `GET /download/{filename}` -> PDF as an attachment-style response
 
-**Technical Challenges**
-- Clean prints from phones
-  - Client-side canvas approaches produced soft edges; ReportLab + server render fixed that.
-- Android “Open with…” flow
-  - Some viewers intercepted PDFs; the explicit download endpoint plus Web Share API yielded consistent UX.
-- pdf.js worker bundling under Vite
-  - Wired the worker via `?worker` and `?url` imports and set `GlobalWorkerOptions`. See `src/lib/pdfjs.js:4`.
-- Network-aware base URL
-  - Auto-detecting the backend lets the same build run on localhost and on-device with only an env var change.
+**Local Setup**
 
+Prerequisites:
 
-**Roadmap**
-- Free-form layout: custom rows/cols, margins and crop marks.
-- Multi-page batches and per-cell rotation/zoom tools.
-- Cloud storage + signed links for PDFs instead of local disk.
-- i18n (Spanish/English toggle) and accessibility passes.
-- Dockerfiles and CI to build/test both tiers.
-- Tighter PWA caching and smaller bundles; cache PDFs only by explicit user action.
-- Tests: unit (layout math) and E2E (happy paths on mobile browsers).
+- Node.js 18+
+- Python 3.11+
 
+Backend:
 
-**Project Structure**
-- `src/pages/` — route screens (`Subida`, `Edicion`, `SelectorLayouts`, `Grilla`, `GrillaComunicado`)
-- `src/components/` — UI and `PdfPreview`
-- `src/hooks/` — image state and PDF generation hooks
-- `backend/` — FastAPI app and PDF utilities
-- `public/` — PWA manifest and icons
+```bash
+cd backend
+python -m venv .venv
+. .venv/Scripts/Activate   # Windows PowerShell
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Frontend:
+
+```bash
+npm install
+npm run dev
+```
+
+Create `.env.development` in the repo root when needed:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+For testing from a phone on the same Wi-Fi network, point `VITE_API_URL` to the computer's local IP, for example:
+
+```env
+VITE_API_URL=http://192.168.1.10:8000
+```
 
 **Scripts**
-- `npm run dev` — run Vite dev server
-- `npm run build` — build frontend
-- `npm run preview` — preview production build
 
-If you want more details about any decision or the deployment I used, open an issue or ping me.
+- `npm run dev` — start Vite development server.
+- `npm run build` — build the frontend.
+- `npm run preview` — preview the production build.
+- `npm run lint` — run ESLint.
+
+**Project Structure**
+
+```text
+src/
+  components/ui/          reusable UI controls
+  helpers/                API, download and share helpers
+  hooks/                  image context, filters and PDF generation hook
+  pages/                  upload, layout selection, edit and PDF preview screens
+backend/
+  main.py                 FastAPI app and endpoints
+  utils/pdf_creator.py    A4 grid PDF generation
+public/
+  manifest.webmanifest    PWA metadata
+  icons/                  installable app icons
+```
+
+**Deployment Notes**
+
+- The frontend can be deployed to Vercel. `vercel.json` already provides an SPA fallback.
+- Set `VITE_API_URL` in the frontend deployment to the public backend URL.
+- The backend can run with Uvicorn behind a reverse proxy such as Caddy or Nginx.
+- Generated PDFs live under `backend/uploads/pdfs/`; use shared storage if running multiple backend instances.
+- CORS currently allows the deployed frontend and local development origin. Add any new frontend domains in `backend/main.py`.
+
+**Known Limitations**
+
+- Generated PDFs are temporary and local to the backend instance.
+- Multi-instance backend deployments need shared storage or sticky routing.
+- Web Share API support differs by browser; the app falls back to download/open flows.
+- The current layout options are fixed to the most common classroom print formats.
+
+**Roadmap**
+
+- Custom rows, columns, margins and crop marks.
+- Multi-page batches.
+- Per-cell zoom/rotation controls.
+- Stronger accessibility pass.
+- Docker setup and CI.
+- Automated tests for layout math and mobile happy paths.

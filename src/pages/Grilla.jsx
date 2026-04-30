@@ -1,58 +1,45 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { useGenerarGrillaPDF } from '@/hooks/useGenerarGrillaPDF'
-import PdfPreview from '@/components/PdfPreview'
 import BotonVolver from '@/components/ui/BotonVolver'
-import '@/lib/pdfjs'
+import { Document, Page, pdfjs} from 'react-pdf'
+import TextLayer from 'react-pdf/dist/Page/TextLayer.js'
+import AnnotationLayer from 'react-pdf/dist/Page/AnnotationLayer.js'
+import { Descargar } from '../helpers/descargar'
+import { Compartir } from '../helpers/compartir'
+
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString()
+
 
 export default function Grilla() {
   const { state } = useLocation()
 
-  const base64 = state?.base64Procesada
+  const imgblob = state?.imagenFinal
+  console.log('llego la url', imgblob)
   const layout = state?.layoutSeleccionado
+  console.log('layout recibido:', layout)
 
-  const { pdfUrl, loading, error } = useGenerarGrillaPDF(base64, layout)
-  const [shareLoading, setShareLoading] = useState(false)
+  const { pdfUrl, loading, error } = useGenerarGrillaPDF(imgblob, layout)
+console.log (pdfUrl, "pdfurl ES")
+  const containerRef = useRef(null)
+  const [containerWidth, setContainerWidth] = useState(null)
 
-  async function handleOpenWithChooser() {
-    if (!pdfUrl) return
+useEffect(() => {
+  if (!containerRef.current) return
 
-    setShareLoading(true)
-
-    try {
-      const res = await fetch(pdfUrl, { cache: 'no-store' })
-      if (!res.ok) throw new Error()
-
-      const blob = await res.blob()
-      const file = new File([blob], 'grilla.pdf', { type: 'application/pdf' })
-
-      if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-        await navigator.share({
-          files: [file],
-          title: 'Abrir PDF',
-          text: 'Elegí con qué app abrir o imprimir el PDF',
-        })
-        return
-      }
-
-      const objectUrl = URL.createObjectURL(blob)
-      window.open(objectUrl, '_blank', 'noopener,noreferrer')
-
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000)
-
-    } catch (e) {
-      console.error(e)
-
-      const a = document.createElement('a')
-      a.href = pdfUrl
-      a.download = 'grilla.pdf'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-    } finally {
-      setShareLoading(false)
+  const resizeObserver = new ResizeObserver(() => {
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth - 16)
     }
-  }
+  })
+
+  resizeObserver.observe(containerRef.current)
+  return () => resizeObserver.disconnect()
+}, [pdfUrl])
 
   return (
     <div className="min-h-screen bg-emerald-900 p-6 flex flex-col items-center">
@@ -70,7 +57,7 @@ export default function Grilla() {
 
   function renderContenido() {
 
-    if (!base64 || !layout) {
+    if (!imgblob || !layout) {
       return (
         <Card>
           <p className="mb-3 text-sm">
@@ -106,31 +93,35 @@ export default function Grilla() {
     return (
       <div className="w-full max-w-md space-y-4">
 
-        <div className="w-full border border-emerald-700 rounded-xl bg-emerald-800/30 p-2">
-          <PdfPreview src={pdfUrl} page={1} maxWidth={800} showControls />
-        </div>
+        <div 
+        ref = {containerRef}
+        className="w-full border border-emerald-700 rounded-xl bg-emerald-800/30 p-2">
+
+          <Document file={pdfUrl}>
+            <Page pageNumber={1} width={containerWidth } />
+          </Document>        
+          </div>
 
         <div className="grid grid-cols-1 gap-2">
 
           <button
             onClick={() => window.open(pdfUrl, '_blank', 'noopener,noreferrer')}
-            className="hidden md:block w-full bg-white text-emerald-900 border border-emerald-600 rounded-xl px-4 py-3 font-semibold hover:bg-emerald-50"
+            className="hidden md:block w-full bg-white text-emerald-900 border border-emerald-600 rounded-xl px-4 py-3 font-semibold hover:bg-emerald-500"
           >
             Abrir en pestaña
           </button>
 
           <button
-            onClick={handleOpenWithChooser}
-            disabled={shareLoading}
-            className={`w-full rounded-xl px-4 py-3 font-semibold border border-emerald-600
-            ${shareLoading
-              ? 'bg-emerald-700 text-emerald-200 opacity-70'
-              : 'bg-white text-emerald-900 hover:bg-emerald-50'
-            }`}
-          >
-            {shareLoading ? 'Abriendo…' : 'Abrir con…'}
+            onClick={()=>Compartir(pdfUrl, "grilla")}
+            className="md:hidden block w-full rounded-xl emerald-4 py-3 text-emerald-900 bg-white font-semibold border border-emerald-600  hover:bg-emerald-500"
+            >
+              Abrir con...
           </button>
-
+   <button
+            onClick={()=>Descargar(pdfUrl, "grilla")}
+            className="w-full rounded-xl pemeraldx-4 text-emerald-900 bg-white py-3 font-semibold border border-emerald-600  hover:bg-emerald-500"
+            >Descargar
+          </button>
         </div>
 
         <p className="text-xs text-emerald-200 opacity-80 text-center">

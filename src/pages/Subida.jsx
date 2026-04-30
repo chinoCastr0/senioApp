@@ -1,5 +1,5 @@
 // src/pages/Subida.jsx
-import { useState, useEffect } from 'react'
+import { useState, useRef} from 'react'
 import { useNavigate } from 'react-router-dom'
 import {useImagenTemporal} from '../hooks/ImageContext'
 
@@ -18,6 +18,11 @@ export default function Subida() {
   const {imagenBlob, setImagenBlob} = useImagenTemporal();
   const [listoImg, setListoImg] = useState()
   const navigate = useNavigate()
+  const [texto, setTexto] = useState('')
+  const [cargandoCom, setCargandoCom] = useState(false)
+  const [errorCom, setErrorCom] = useState('')
+  const oncePreview = useRef(null)
+  
 
   async function compresionImagen(archivo){
     const archivoOriginal = archivo
@@ -45,50 +50,46 @@ export default function Subida() {
   
       const archCompreso = await compresionImagen(archivoSel)
       setImagenBlob(archCompreso)
+      console.log('imagen seteada: ',archCompreso)
         setListoImg(true)
+        oncePreview.current = URL.createObjectURL(archCompreso)
+        setPreview(oncePreview.current)
+        oncePreview.current = URL.revokeObjectURL(archCompreso)
 
   }
   }
-  useEffect(() => { //preview de subida
-    if (imagenBlob && imagenBlob.type.startsWith('image/')) {
-      const url = URL.createObjectURL(imagenBlob)
-      setPreview(url)
-      return () => URL.revokeObjectURL(url)
-    } else {
-      setPreview(null)
-    }
-  }, [imagenBlob])
 
+    console.log('aca se tendria que borrar', preview, 'aca imagenBLB', imagenBlob)
 
   function irALayouts() {
     navigate('/layouts')
   }
 
+
   // Comunicado 
-  const [texto, setTexto] = useState('')
-  const [cargandoCom, setCargandoCom] = useState(false)
-  const [errorCom, setErrorCom] = useState('')
+
 
   async function generarComunicado(e) {
-    e.preventDefault()
-    if (!texto.trim()) {
+    e.preventDefault()// corroborar si sirve, es para cortar comportamiento default
+    if (!texto.trim()) {//evita q se envie vacio
       setErrorCom('Escribí el comunicado')
       return
     }
-    setErrorCom('')
+    setErrorCom('')//corroborar
     setCargandoCom(true)
     try {
       const fd = new FormData()
       fd.append('texto', texto)
-      const data = await postForm('/generar-comunicado', fd)
+      const data = await postForm('/generar-comunicado', fd)//creacion de fd y envio de request
 
 
-      const pdf = data?.pdf_url || data?.preview_url
+      const pdf = data?.pdf_url || data?.preview_url //preview_url y pdf_url son lo mismo
       const download = data?.download_url || null
-
-      const qs = new URLSearchParams()
+      const filename = data?.filename || null
+      const qs = new URLSearchParams() //las qs(querystring) son key&value enviadas en la url, urlsearchparams es para separarlas
       if (pdf) qs.set('pdf', pdf)
       if (download) qs.set('download', download)
+      if (filename) qs.set('filename', filename)
 
       navigate(`/grilla-comunicado?${qs.toString()}`)
     } catch  {
@@ -115,7 +116,7 @@ export default function Subida() {
 
         <InputArchivo onArchivoSeleccionado={manejarArchivo} className="" />
 
-        {preview && (
+        {preview&& (
           <div className=" text-center text-sm text-emerald-700">
             <div className=" mt-4 border border-emerald-200 rounded p-3 bg-emerald-50">
               <p className="mb-2"></p>
@@ -131,6 +132,7 @@ export default function Subida() {
             texto={listoImg ? "Crear grilla →" : "Inserte imagen"}
             onClick={irALayouts}
             disabled={!imagenBlob || !listoImg}
+            
           />
         </div>
       </div>

@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
-
+import path from 'path'
 export default defineConfig({
   base: '/',
   plugins: [
@@ -44,6 +44,13 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
-  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  resolve: { alias: { 'pdfjs-dist': path.resolve('./node_modules/react-pdf/node_modules/pdfjs-dist')
+, 
+    react: path.resolve('./node_modules/react'),
+      'react-dom': path.resolve('./node_modules/react-dom'),
+      '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+      optimizeDeps: {
+    include: ['pdfjs-dist/build/pdf.worker.min.mjs'],
+  },
   server: { host: true, port: 5173, strictPort: true },
 })

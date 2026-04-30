@@ -1,11 +1,15 @@
-export function aplicarFiltroCanvas(base64, filtro) {
-  return new Promise((resolve) => {
-    if (!base64 || filtro === 'ninguno') {
-      return resolve(base64); // 👈 no reproceses
+
+
+export function aplicarFiltroCanvas(imagenBlob, filtro) {
+  return new Promise((resolve, reject) => {
+    if (!imagenBlob || filtro === 'ninguno') {
+      return resolve(imagenBlob); // cierra la promesa
     }
 
     const img = new Image();
     img.crossOrigin = 'Anonymous';
+    const urlTemp = URL.createObjectURL(imagenBlob);
+
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
@@ -24,9 +28,17 @@ export function aplicarFiltroCanvas(base64, filtro) {
       }
 
       ctx.drawImage(img, 0, 0);
-      const nuevoBase64 = canvas.toDataURL('image/jpeg', 1.0);
-      resolve(nuevoBase64);
-    };
-    img.src = base64;
-  });
+
+      canvas.toBlob((blob) => {
+        URL.revokeObjectURL(urlTemp);
+        resolve(blob)},'image/jpeg');
+    
+  };
+
+  img.onerror = () => {
+    URL.revokeObjectURL(urlTemp);
+    reject(new Error("No se pudo cargar la imagen en el canvas"));
+  };
+  img.src = urlTemp;
+  })
 }
